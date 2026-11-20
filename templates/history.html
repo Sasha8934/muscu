@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Mes séances{% endblock %}
+{% block content %}
+<a href="{{ url_for('week') }}" class="back">{{ icon("left", 18) }}Semaine</a>
+<div class="row">
+  <h1>Toutes mes séances</h1>
+  <a class="btn small" href="{{ url_for('new_session') }}">{{ icon("plus", 18) }} Ajouter</a>
+</div>
+<p class="muted small">Touche une séance pour la revoir ou la modifier, même ancienne. Pour saisir une séance passée : « Ajouter », puis choisis la date.</p>
+
+{% for m in months %}
+  <div class="row section-head">
+    <h2 class="group-title">{{ m.label }}</h2>
+    <span class="muted small">{{ m.sessions|length }} séance{{ 's' if m.sessions|length > 1 }} · {{ m.tonnage|kg }} kg</span>
+  </div>
+  {% for s in m.sessions %}
+    {% include "_session_card.html" %}
+  {% endfor %}
+{% else %}
+  <p class="muted center empty">Aucune séance pour l'instant.</p>
+{% endfor %}
+{% endblock %}

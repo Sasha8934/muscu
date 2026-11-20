@@ -1,0 +1,9 @@
+{# Vignette d'un exercice : sa photo si elle existe, sinon le petit schéma du muscle. Attend une variable « e ». #}
+{%- if e.image -%}
+<span class="thumb">
+  <img src="{{ url_for('static', filename='exos/' ~ e.image ~ '/mini.jpg') }}" alt="" loading="lazy" width="60" height="60">
+  {{ body_mini(e.primary_muscle or e.primary, e.secondary_keys or e.secondary or []) }}
+</span>
+{%- else -%}
+{{ body_mini(e.primary_muscle or e.primary, e.secondary_keys or e.secondary or []) }}
+{%- endif -%}

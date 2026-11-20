@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}{{ session.name }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('week', semaine=session.day) }}" class="back">{{ icon("left", 18) }}Semaine</a>
+<div class="row session-title">
+  <h1>{{ session.name }}</h1>
+  {% if session.done %}<span class="status done">{{ icon("check", 14) }} Validée</span>{% else %}<span class="status">Prévue</span>{% endif %}
+</div>
+<p class="muted session-date">{{ session.day|jour }}{% if is_future %} · à venir{% endif %}</p>
+
+<div class="stat-row card">
+  <div><span class="stat-value">{{ details.exercises|length }}</span><span class="stat-label">Exercice{{ 's' if details.exercises|length > 1 }}</span></div>
+  <div><span class="stat-value">{{ details.set_count }}<small>/{{ details.set_count + details.planned_count }}</small></span><span class="stat-label">Séries cochées</span></div>
+  <div><span class="stat-value">{{ details.tonnage|kg }}</span><span class="stat-label">kg soulevés</span></div>
+</div>
+
+{% if needs_bw %}
+  <div class="flash warn">
+    Ajoute ton poids (bouton <a href="{{ url_for('weight') }}">Poids</a> en haut) pour calculer le tonnage des exercices au poids du corps.
+  </div>
+{% endif %}
+
+{% for e in details.exercises %}
+<section class="card exo" id="ex-{{ e.id }}">
+  <div class="exo-head">
+    <a href="{{ url_for('exercise_detail', exercise_id=e.id, retour=session.id) }}" class="thumb-link" aria-label="Comment faire : {{ e.name }}">{% include "_thumb.html" %}</a>
+    <div class="exo-title">
+      <div class="row">
+        <h2>{{ e.name }}</h2>
+        <span class="badge">{{ e.done_sets|length }}/{{ e.sets|length }}</span>
+      </div>
+      {% if e.last %}<span class="last-max inline">Dernière fois : {{ e.last.max|charge(e.bodyweight) }} max</span>{% endif %}
+    </div>
+  </div>
+  <p class="muted small">
+    {{ equip(e.equipment) }} · {{ e.muscle }}
+    {% if e.last %}<br>Dernière fois ({{ e.last.day|jour_court }}) : {{ e.last.text }}{% endif %}
+    <br><a href="{{ url_for('exercise_detail', exercise_id=e.id, retour=session.id) }}">Comment faire</a>
+    {% if e.last %} · <a href="{{ url_for('progress_exercise', exercise_id=e.id) }}">Mes progrès</a>{% endif %}
+  </p>
+
+  {% if e.sets %}
+    <div class="set-head">
+      <span>Série</span><span>Reps</span><span>{{ 'Lest' if e.bodyweight else 'Kg' }}</span><span>Fait</span><span></span>
+    </div>
+    <ol class="sets">
+      {% for s in e.sets %}
+        <li>
+          <form method="post" action="{{ url_for('toggle_set', set_id=s.id) }}" class="set-row {{ 'done' if s.done }}" data-set-form
+                data-update="{{ url_for('update_set', set_id=s.id) }}">
+            <span class="set-n">{{ loop.index }}</span>
+            <input name="reps" type="number" inputmode="numeric" min="1" max="1000" value="{{ s.reps }}" required aria-label="Répétitions de la série {{ loop.index }}">
+            <input name="weight" type="text" inputmode="decimal" value="{{ s.weight|kgin }}" placeholder="0" aria-label="{{ 'Lest' if e.bodyweight else 'Charge' }} de la série {{ loop.index }} en kilos">
+            <button class="check-btn" aria-pressed="{{ 'true' if s.done else 'false' }}" aria-label="{{ 'Décocher' if s.done else 'Cocher' }} la série {{ loop.index }}">{{ icon("check", 20) }}</button>
+            <button class="icon" formaction="{{ url_for('delete_set', set_id=s.id) }}" formnovalidate aria-label="Supprimer la série {{ loop.index }}">{{ icon("x", 16) }}</button>
+          </form>
+          {% if s.id == e.record_set %}<span class="pill record set-record">{{ icon("trophy", 14) }} Record</span>{% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  {% endif %}
+
+  <div class="exo-actions">
+    <form method="post" action="{{ url_for('add_set', session_id=session.id) }}">
+      <input type="hidden" name="exercise_id" value="{{ e.id }}">
+      <button class="btn small ghost">{{ icon("plus", 16) }} Série</button>
+    </form>
+    <details class="plan">
+      <summary class="btn small ghost">Régler les séries</summary>
+      <form method="post" action="{{ url_for('plan_sets', session_id=session.id, exercise_id=e.id) }}" class="plan-form">
+        <label>Séries <input name="count" type="number" inputmode="numeric" min="1" max="20" value="{{ e.sets|length or 3 }}" required></label>
+        <label>Reps <input name="reps" type="number" inputmode="numeric" min="1" max="1000" value="{{ e.prefill.reps }}" required></label>
+        <label>{{ 'Lest' if e.bodyweight else 'Kg' }} <input name="weight" type="text" inputmode="decimal" value="{{ e.prefill.weight|kgin }}" placeholder="0"></label>
+        <button class="btn small">Appliquer</button>
+        <p class="muted small">Remplace les séries pas encore cochées. Les séries déjà faites sont gardées.</p>
+      </form>
+    </details>
+  </div>
+
+  <form method="post" action="{{ url_for('remove_exercise', session_id=session.id, exercise_id=e.id) }}"
+        data-confirm="Retirer « {{ e.name }} » et ses séries de cette séance ?" class="right">
+    <button class="link danger small">Retirer l'exercice</button>
+  </form>
+</section>
+{% else %}
+  <p class="muted center empty">Aucun exercice pour l'instant.<br>Ajoute-les dès maintenant pour préparer ta séance.</p>
+{% endfor %}
+
+<a class="btn block ghost dashed" href="{{ url_for('pick_exercise', session_id=session.id) }}">{{ icon("plus", 18) }} Ajouter un exercice</a>
+
+<form method="post" action="{{ url_for('validate_session', session_id=session.id) }}">
+  {% if session.done %}
+    <button class="btn block ghost">Annuler la validation</button>
+  {% else %}
+    <button class="btn block big">{{ icon("check", 20) }} Valider la séance</button>
+    <p class="muted small center">Tant que tu ne valides pas, la séance reste « prévue » et ne compte pas dans ta semaine.</p>
+  {% endif %}
+</form>
+
+<div class="card" id="deplacer">
+  <h2>Déplacer la séance</h2>
+  <div class="chips wrap">
+    {% for d, label in quick_days %}
+      <form method="post" action="{{ url_for('move_session', session_id=session.id) }}">
+        <input type="hidden" name="day" value="{{ d.isoformat() }}">
+        <button class="chip {{ 'active' if d.isoformat() == session.day }}">{{ label }}</button>
+      </form>
+    {% endfor %}
+  </div>
+  <form method="post" action="{{ url_for('move_session', session_id=session.id) }}" class="move-form">
+    <input type="date" name="day" value="{{ session.day }}" required aria-label="Nouvelle date">
+    <button class="btn small ghost">Déplacer</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>{{ icon("star", 18) }} Favori</h2>
+  {% if favorite %}
+    <p class="muted small">Cette séance vient du favori « {{ favorite.name }} ».</p>
+    <div class="btn-row">
+      <form method="post" action="{{ url_for('save_favorite', session_id=session.id) }}">
+        <button class="btn small ghost block-btn">Mettre à jour le favori</button>
+      </form>
+      <form method="post" action="{{ url_for('save_favorite', session_id=session.id) }}">
+        <input type="hidden" name="mode" value="nouveau">
+        <button class="btn small ghost block-btn">Nouveau favori</button>
+      </form>
+    </div>
+  {% else %}
+    <p class="muted small">Enregistre cette séance (exercices, nombre de séries, reps et poids) pour la relancer en un geste.</p>
+    <form method="post" action="{{ url_for('save_favorite', session_id=session.id) }}">
+      <button class="btn small ghost">{{ icon("star", 16) }} Enregistrer en favori</button>
+    </form>
+  {% endif %}
+</div>
+
+<details class="card">
+  <summary>Modifier ou supprimer la séance</summary>
+  <form method="post" action="{{ url_for('edit_session', session_id=session.id) }}">
+    <label>Nom <input name="name" value="{{ session.name }}" maxlength="80" required></label>
+    <label>Date <input type="date" name="day" value="{{ session.day }}" required></label>
+    <label>Notes <textarea name="notes" rows="3" maxlength="1000">{{ session.notes }}</textarea></label>
+    <button class="btn">Enregistrer</button>
+  </form>
+  <form method="post" action="{{ url_for('delete_session', session_id=session.id) }}"
+        data-confirm="Supprimer cette séance et toutes ses séries ?">
+    <button class="btn danger block">Supprimer la séance</button>
+  </form>
+</details>
+{% endblock %}

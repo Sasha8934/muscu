@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Poids{% endblock %}
+{% block content %}
+<h1>Mon poids</h1>
+
+{% if entries %}
+  <div class="stats two">
+    <div class="stat"><span class="stat-value">{{ entries[0].kg|kg }} kg</span><span class="stat-label">Actuel</span></div>
+    <div class="stat">
+      {% set change = entries[0].kg - entries[-1].kg %}
+      <span class="stat-value">{{ '+' if change > 0 }}{{ change|kg }} kg</span>
+      <span class="stat-label">Depuis le {{ entries[-1].day|jour_court }}</span>
+    </div>
+  </div>
+{% endif %}
+
+{% if chart %}
+  {% from "_chart.html" import chart_block %}
+  <div class="card">
+    <h2>Évolution du poids</h2>
+    {{ chart_block(chart, "Poids du corps") }}
+  </div>
+{% endif %}
+
+<form method="post" class="card weight-form">
+  <label>Date <input type="date" name="day" value="{{ today }}" required></label>
+  <label>Poids (kg) <input name="kg" type="text" inputmode="decimal" placeholder="Ex. : 75,4" required></label>
+  <button class="btn">Ajouter</button>
+</form>
+<p class="muted small">Ton poids sert à calculer le tonnage des exercices au poids du corps : répétitions × (poids + lest).</p>
+
+{% if entries %}
+  <h2 class="group-title">Historique</h2>
+  <ul class="entries card">
+    {% for e in entries %}
+      <li>
+        <span>{{ e.day|jour }}</span>
+        <span class="entry-kg">
+          <strong>{{ e.kg|kg }} kg</strong>
+          {% if e.diff %}<span class="small {{ 'up' if e.diff > 0 else 'down' }}">{{ '+' if e.diff > 0 }}{{ e.diff|kg }}</span>{% endif %}
+        </span>
+        <form method="post" action="{{ url_for('delete_weight', entry_id=e.id) }}" data-confirm="Supprimer cette pesée ?">
+          <button class="icon" aria-label="Supprimer">{{ icon("x", 18) }}</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+{% endblock %}

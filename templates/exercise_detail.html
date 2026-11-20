@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ ex.name }}{% endblock %}
+{% block content %}
+{% if retour %}
+  <a href="{{ url_for('session_view', session_id=retour, _anchor='ex-' ~ ex.id if in_session else None) }}" class="back">{{ icon("left", 18) }}Retour à la séance</a>
+{% else %}
+  <a href="{{ url_for('exercises', muscle=ex.primary_muscle) }}" class="back">{{ icon("left", 18) }}Exercices</a>
+{% endif %}
+
+{% if ex.image %}
+  <figure class="howto" data-howto data-mode="anim">
+    <div class="howto-frames">
+      <img src="{{ url_for('static', filename='exos/' ~ ex.image ~ '/0.jpg') }}" alt="{{ ex.name }} : position de départ">
+      <img src="{{ url_for('static', filename='exos/' ~ ex.image ~ '/1.jpg') }}" alt="{{ ex.name }} : position d'arrivée">
+      <span class="howto-step" data-step-label>1 · Départ</span>
+    </div>
+    <div class="segmented howto-modes" role="group" aria-label="Affichage">
+      <button type="button" data-mode-btn="anim" class="active">Animation</button>
+      <button type="button" data-mode-btn="start">1 · Départ</button>
+      <button type="button" data-mode-btn="end">2 · Arrivée</button>
+    </div>
+  </figure>
+{% endif %}
+
+<div class="exo-head big">
+  {{ body_mini(ex.primary_muscle, ex.secondary_keys) }}
+  <div>
+    <h1>{{ ex.name }}</h1>
+    <p class="muted">{{ equip(ex.equipment) }}{% if ex.custom %} · perso{% endif %}</p>
+  </div>
+</div>
+
+<p class="tags">
+  <span class="tag primary">{{ ex.primary_name }}</span>
+  {% for s in ex.secondary_list %}<span class="tag">{{ s }}</span>{% endfor %}
+</p>
+
+<div class="stat-row card">
+  <div>
+    <span class="stat-value">{{ ex.last.weight|charge(ex.bodyweight) if ex.last else '–' }}</span>
+    <span class="stat-label">Dernière charge max</span>
+  </div>
+  <div>
+    <span class="stat-value">{{ summary.best_text if summary else '–' }}</span>
+    <span class="stat-label">Meilleure série</span>
+  </div>
+  <div>
+    <span class="stat-value">{{ summary.session_count if summary else 0 }}</span>
+    <span class="stat-label">Séance{{ 's' if summary and summary.session_count > 1 }}</span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Comment le faire</h2>
+  {% if ex.image %}<p class="muted small">Regarde l'animation : départ (1), puis arrivée (2). Reviens lentement à la position de départ.</p>{% endif %}
+  {% if ex.tips %}<p class="tip">{{ icon("flame", 18) }}<span>{{ ex.tips }}</span></p>{% endif %}
+  {% if ex.bodyweight %}<p class="muted small">Exercice au poids du corps : tu peux ajouter du lest (ceinture, gilet, haltère).</p>{% endif %}
+  {% if not ex.image and not ex.tips %}<p class="muted small">Pas encore d'explication pour cet exercice. Ajoute un conseil avec « Modifier ».</p>{% endif %}
+</div>
+
+{% if retour and not in_session %}
+  <form method="post" action="{{ url_for('add_exercise_to_session', session_id=retour) }}">
+    <input type="hidden" name="exercise_id" value="{{ ex.id }}">
+    <button class="btn block">{{ icon("plus", 18) }} Ajouter à ma séance</button>
+  </form>
+{% endif %}
+<div class="btn-row">
+  {% if summary %}<a class="btn ghost" href="{{ url_for('progress_exercise', exercise_id=ex.id) }}">{{ icon("chart", 18) }} Mes progrès</a>{% endif %}
+  <a class="btn ghost" href="{{ url_for('edit_exercise', exercise_id=ex.id) }}">Modifier</a>
+</div>
+
+{% if ex.image %}<p class="credit center">Photos : Free Exercise DB (domaine public).</p>{% endif %}
+{% endblock %}

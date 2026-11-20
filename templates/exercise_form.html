@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Modifier' if exercise_id else 'Nouvel' }} exercice{% endblock %}
+{% block content %}
+<a href="{{ url_for('pick_exercise', session_id=retour) if retour else url_for('exercises') }}" class="back">{{ icon("left", 18) }}Retour</a>
+<h1>{{ "Modifier l'exercice" if exercise_id else "Nouvel exercice" }}</h1>
+
+<form method="post">
+  <label>Nom <input name="name" value="{{ ex.name }}" maxlength="80" required></label>
+
+  <label>Muscle principal
+    <select name="primary_muscle" required>
+      <option value="">Choisir…</option>
+      {% for key, name in muscles %}
+        <option value="{{ key }}" {{ 'selected' if ex.primary_muscle == key }}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <p class="label">Muscles secondaires</p>
+  <div class="checks">
+    {% for key, name in muscles %}
+      <label class="check"><input type="checkbox" name="secondary" value="{{ key }}" {{ 'checked' if key in ex.secondary_keys }}> {{ name }}</label>
+    {% endfor %}
+  </div>
+
+  <label>Matériel
+    <select name="equipment">
+      {% for eq in equipments %}
+        <option {{ 'selected' if ex.equipment == eq }}>{{ eq }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <label class="check inline"><input type="checkbox" name="bodyweight" value="1" {{ 'checked' if ex.bodyweight }}> Exercice au poids du corps (on saisit le lest)</label>
+
+  <label>Conseils <textarea name="tips" rows="3" maxlength="500">{{ ex.tips }}</textarea></label>
+
+  <button class="btn block">{{ 'Enregistrer' if exercise_id else ('Créer et ajouter à la séance' if retour else "Créer l'exercice") }}</button>
+</form>
+
+{% if exercise_id %}
+  {% if used %}
+    <p class="muted small">Cet exercice est utilisé dans une séance : il ne peut pas être supprimé.</p>
+  {% else %}
+    <form method="post" action="{{ url_for('delete_exercise', exercise_id=exercise_id) }}" data-confirm="Supprimer cet exercice ?">
+      <button class="btn danger block">Supprimer l'exercice</button>
+    </form>
+  {% endif %}
+{% endif %}
+{% endblock %}

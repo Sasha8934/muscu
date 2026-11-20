@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Exercices{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>Guide des exercices</h1>
+  <a class="btn small" href="{{ url_for('new_exercise', muscle=muscle or '') }}">{{ icon("plus", 18) }} Nouveau</a>
+</div>
+
+<div class="card body-card">
+  <div class="body-top">
+    <p class="body-hint">{% if muscle %}<strong>{{ muscle_name }}</strong> · touche-le à nouveau pour tout revoir{% else %}Touche un muscle pour voir ses exercices{% endif %}</p>
+    <form method="post" action="{{ url_for('set_body_sex') }}" class="segmented" aria-label="Silhouette">
+      <input type="hidden" name="retour" value="{{ request.full_path }}">
+      {% for key, label in BODY.SEXES %}
+        <button name="sexe" value="{{ key }}" class="{{ 'active' if body_sex == key }}" aria-pressed="{{ 'true' if body_sex == key else 'false' }}">{{ label }}</button>
+      {% endfor %}
+    </form>
+  </div>
+  {{ body_map(muscle) }}
+</div>
+
+<input class="search" type="search" placeholder="Rechercher un exercice…" data-search>
+
+<div class="chips">
+  <a class="chip {{ 'active' if not muscle }}" href="{{ url_for('exercises') }}">Tous</a>
+  {% for key, name in muscles %}
+    <a class="chip {{ 'active' if muscle == key }}" href="{{ url_for('exercises', muscle=key) }}">{{ name }}</a>
+  {% endfor %}
+</div>
+
+{% for grp in groups %}
+<section data-group>
+  <h2 class="group-title">{{ grp.name }}</h2>
+  {% for e in grp.exercises %}
+    <a class="card guide" href="{{ url_for('exercise_detail', exercise_id=e.id) }}" data-name="{{ e.name }}">
+      {% include "_thumb.html" %}
+      <span class="guide-text">
+        <strong>{{ e.name }}</strong>
+        <span class="muted small">{{ equip(e.equipment) }}{% if e.custom %} · perso{% endif %}</span>
+      </span>
+      {% if e.last %}<span class="last-max" title="Plus grosse charge de la dernière séance">{{ e.last.weight|charge(e.bodyweight) }}<small>{{ e.last.day|jour_court }}</small></span>
+      {% else %}<span class="chev">{{ icon("right", 18) }}</span>{% endif %}
+    </a>
+  {% endfor %}
+</section>
+{% endfor %}
+<p class="muted small center credit">Silhouettes : react-native-body-highlighter (licence MIT, © ELABBASSI Hicham). Photos : Free Exercise DB (domaine public).</p>
+<p class="muted small center">Touche un exercice pour voir comment le faire.<br>En couleur vive : muscle principal (compté dans le tonnage) ; en pâle : muscles secondaires.<br>À droite : ta plus grosse charge lors de la dernière séance.</p>
+{% endblock %}

@@ -1,0 +1,10 @@
+# Données personnelles et notes : jamais sur GitHub
+*.db
+*.db-journal
+CLAUDE.md
+.claude/
+exemples design/
+
+# Fichiers générés
+__pycache__/
+*.pyc

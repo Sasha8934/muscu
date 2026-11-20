@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Nouvelle séance{% endblock %}
+{% block content %}
+<h1>Nouvelle séance</h1>
+<form method="post">
+  <p class="label">Quel jour ?</p>
+  <div class="chips wrap">
+    {% for d, label in quick %}
+      <a class="chip {{ 'active' if d == day }}" href="{{ url_for('new_session', day=d.isoformat()) }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+  <label>Ou choisis une date (passée pour saisir, future pour préparer)
+    <input type="date" name="day" value="{{ day.isoformat() }}" required data-day-picker>
+  </label>
+  {% if day < today %}
+    <div class="flash warn">Tu ajoutes une séance passée : <strong>{{ day|jour }}</strong>.</div>
+  {% elif day > today %}
+    <div class="flash">Tu prépares une séance pour <strong>{{ day|jour|lower }}</strong>. Tu pourras la déplacer si besoin.</div>
+  {% endif %}
+
+  {% if favorites %}
+    <p class="label">{{ icon("star", 14) }} Mes séances favorites</p>
+    <div class="choices">
+      {% for f in favorites %}
+        <label class="choice">
+          <input type="radio" name="choice" value="f{{ f.id }}" {{ 'checked' if suggested == 'f' ~ f.id }}>
+          <span>
+            <strong>{{ f.name }}</strong><br>
+            <span class="muted small">{% for x in f.exercises %}{{ x.name }} ×{{ x.sets }}{{ ' · ' if not loop.last }}{% endfor %}</span>
+          </span>
+        </label>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <p class="label">Séance type (groupes musculaires)</p>
+  <div class="choices">
+    {% for t in templates %}
+      <label class="choice">
+        <input type="radio" name="choice" value="t{{ t.id }}" {{ 'checked' if suggested == 't' ~ t.id }}>
+        <span>
+          <strong>{{ t.name }}</strong>{% if t.day %} <span class="pill">{{ t.day }}</span>{% endif %}<br>
+          <span class="muted small">{{ t.muscle_names }}</span>
+        </span>
+      </label>
+    {% endfor %}
+    <label class="choice">
+      <input type="radio" name="choice" value="" {{ 'checked' if not suggested }}>
+      <span><strong>Séance libre</strong><br><span class="muted small">Tous les exercices</span></span>
+    </label>
+  </div>
+
+  <label>Nom (facultatif)
+    <input name="name" maxlength="80" placeholder="Par défaut : le nom du favori ou de la séance type">
+  </label>
+  <button class="btn block">{{ 'Préparer cette séance' if day > today else ('Commencer la séance' if day == today else 'Saisir cette séance') }}</button>
+</form>
+
+{% if recent %}
+  <div class="row section-head">
+    <h2 class="group-title">Dernières séances</h2>
+    <a class="small" href="{{ url_for('history') }}">Tout voir</a>
+  </div>
+  {% for s in recent %}
+    {% include "_session_card.html" %}
+  {% endfor %}
+{% endif %}
+{% endblock %}

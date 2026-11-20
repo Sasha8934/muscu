@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Semaine{% endblock %}
+{% block content %}
+{% if is_current %}
+<div class="greet">
+  <div>
+    <p class="muted">{{ greeting }} 👋</p>
+    <h1>Prêt à tout donner ?</h1>
+  </div>
+  <a class="round-btn" href="{{ url_for('history') }}" aria-label="Toutes mes séances">{{ icon("history", 20) }}</a>
+</div>
+{% endif %}
+
+<div class="card progress-card">
+  <div class="ring" style="--p: {{ ring }}" role="img" aria-label="{{ done_days }} séances validées sur {{ goal }} prévues">
+    <span class="ring-value">{{ ring }}<small>%</small></span>
+    <span class="ring-sub">{{ done_days }}/{{ goal }}</span>
+  </div>
+  <div class="progress-stats">
+    <span class="eyebrow">{{ 'Progression de la semaine' if is_current else 'Semaine du ' ~ start|jour_court }}</span>
+    <div class="pstat"><span class="pstat-ico">{{ icon("dumbbell", 18) }}</span><span><strong>{{ totals.tonnage|kg }} kg</strong><small>soulevés</small></span></div>
+    <div class="pstat"><span class="pstat-ico">{{ icon("flame", 18) }}</span><span><strong>{{ totals.sets }} série{{ 's' if totals.sets > 1 }}</strong><small>{{ totals.sessions }} séance{{ 's' if totals.sessions > 1 }}</small></span></div>
+  </div>
+</div>
+
+{% if is_current and today_plan %}
+  <div class="section-head row"><h2>Séance du jour</h2></div>
+  <div class="today-card" {% if today_plan.cover %}style="--cover: url('{{ url_for('static', filename='exos/' ~ today_plan.cover ~ '/1.jpg') }}')"{% endif %}>
+    <div class="today-body">
+      <h3>{{ today_plan.name }}</h3>
+      <p>{{ today_plan.muscle_names }}</p>
+      {% if today_plan.done and today_plan.done.done %}
+        <a class="btn ghost" href="{{ url_for('session_view', session_id=today_plan.done.id) }}">{{ icon("check", 18) }} Validée · voir</a>
+      {% elif today_plan.done %}
+        <a class="btn" href="{{ url_for('session_view', session_id=today_plan.done.id) }}">{{ icon("right", 18) }} Reprendre</a>
+      {% else %}
+        <form method="post" action="{{ url_for('new_session') }}">
+          <input type="hidden" name="template_id" value="{{ today_plan.id }}">
+          <input type="hidden" name="day" value="{{ days|selectattr('is_today')|map(attribute='date')|first }}">
+          <button class="btn">{{ icon("right", 18) }} Démarrer</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% if is_current %}
+<div class="quick">
+  <a href="{{ url_for('new_session') }}"><span>{{ icon("plus", 20) }}</span>Séance</a>
+  <a href="{{ url_for('exercises') }}"><span>{{ icon("dumbbell", 20) }}</span>Exercices</a>
+  <a href="{{ url_for('progress') }}"><span>{{ icon("chart", 20) }}</span>Progrès</a>
+  <a href="{{ url_for('history') }}"><span>{{ icon("history", 20) }}</span>Historique</a>
+</div>
+{% endif %}
+
+<div class="weeknav">
+  <a class="round-btn" href="{{ url_for('week', semaine=prev) }}" aria-label="Semaine précédente">{{ icon("left", 20) }}</a>
+  <div class="weeklabel">
+    <span class="eyebrow">{{ 'Cette semaine' if is_current else 'Semaine' }}</span>
+    <strong>{{ start|jour_court }} – {{ end|jour_court }}</strong>
+  </div>
+  <a class="round-btn" href="{{ url_for('week', semaine=next) }}" aria-label="Semaine suivante">{{ icon("right", 20) }}</a>
+</div>
+{% if not is_current %}
+<div class="week-links">
+  <a href="{{ url_for('week') }}" class="chip">Revenir à cette semaine</a>
+  <a href="{{ url_for('history') }}" class="chip">{{ icon("history", 15) }} Toutes mes séances</a>
+</div>
+{% endif %}
+
+<div class="weekstrip" data-weekstrip data-move-url="{{ url_for('move_session', session_id=0) }}">
+  {% for d in days %}
+    {# Séance déplaçable : de préférence une séance pas encore validée #}
+    {% set movable = (d.sessions|rejectattr('done')|first) or (d.sessions|first) %}
+    {% set label = (d.sessions|first).name if d.sessions else (d.planned.name if d.planned else '') %}
+    <a href="#jour-{{ loop.index }}" data-date="{{ d.date.isoformat() }}" {% if movable %}data-session="{{ movable.id }}"{% endif %}
+       class="strip-day {{ 'done' if d.validated }} {{ 'plan' if not d.validated and d.sessions }} {{ 'suggest' if d.planned and not d.sessions }} {{ 'today' if d.is_today }} {{ 'movable' if movable }}"
+       {% if label %}title="{{ label }}{{ ' (+' ~ (d.sessions|length - 1) ~ ')' if d.sessions|length > 1 }}"{% endif %}>
+      <span class="strip-letter">{{ ['L','M','M','J','V','S','D'][loop.index0] }}</span>
+      <span class="strip-num">{{ d.date.day }}</span>
+      <span class="strip-label">{{ label|court }}</span>
+    </a>
+  {% endfor %}
+</div>
+{% if days|selectattr('sessions')|list %}
+  <p class="strip-hint">{{ icon("right", 14) }} Appui long sur un jour, puis fais-le glisser pour déplacer sa séance.</p>
+{% endif %}
+
+{% for d in days %}
+<section class="day {{ 'today' if d.is_today }}" id="jour-{{ loop.index }}">
+  <h2>{{ d.date|jour }}{% if d.is_today %} <span class="pill">Aujourd'hui</span>{% endif %}</h2>
+  {% for s in d.sessions %}
+    <a class="card session-card {{ 'is-planned' if not s.done }}" href="{{ url_for('session_view', session_id=s.id) }}">
+      <div class="row">
+        <strong>{{ s.name }}</strong>
+        {% if s.done %}
+          <span class="status done">{{ icon("check", 14) }} {{ s.details.tonnage|kg }} kg</span>
+        {% else %}
+          <span class="status">Prévue</span>
+        {% endif %}
+      </div>
+      <div class="muted small">{{ s.details.exercises|length }} exercice{{ 's' if s.details.exercises|length > 1 }} · {{ s.details.set_count }}/{{ s.details.set_count + s.details.planned_count }} séries cochées</div>
+      {% if s.details.exercises %}
+        <div class="mini">
+          {% for e in s.details.exercises %}<span>{{ e.name }} <em>{{ e.done_sets|length }}/{{ e.sets|length }}</em></span>{% endfor %}
+        </div>
+      {% endif %}
+      {% if not s.done and not d.is_future and not d.is_today %}
+        <p class="small late">Pas encore validée : ouvre-la pour la valider ou la déplacer.</p>
+      {% endif %}
+    </a>
+  {% else %}
+    {% if d.planned %}
+      <form method="post" action="{{ url_for('new_session') }}" class="planned suggestion">
+        <input type="hidden" name="template_id" value="{{ d.planned.id }}">
+        <input type="hidden" name="day" value="{{ d.date.isoformat() }}">
+        <span><span class="eyebrow">Suggestion du programme</span><br><strong>{{ d.planned.name }}</strong></span>
+        <button class="btn small">{{ 'Commencer' if d.is_today else ('Préparer' if d.is_future else 'Saisir') }}</button>
+      </form>
+    {% else %}
+      <div class="rest-row">
+        <span class="muted small">Repos</span>
+        <a class="small" href="{{ url_for('new_session', day=d.date.isoformat()) }}">{{ icon("plus", 15) }} {{ 'Préparer' if d.is_future else 'Ajouter' }} une séance</a>
+      </div>
+    {% endif %}
+  {% endfor %}
+  {% if d.sessions %}
+    <a class="add-more small" href="{{ url_for('new_session', day=d.date.isoformat()) }}">{{ icon("plus", 15) }} Autre séance ce jour-là</a>
+  {% endif %}
+</section>
+{% endfor %}
+{% endblock %}

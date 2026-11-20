@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_chart.html" import chart_block, period_chips %}
+{% block title %}{{ muscle_name }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('progress', periode=period) }}" class="back">{{ icon("left", 18) }}Progrès</a>
+<h1>{{ muscle_name }}</h1>
+{{ period_chips(periods, period, "progress_muscle", muscle=muscle) }}
+
+{% if chart %}
+  <div class="card">
+    <h2>Tonnage : {{ total|kg }} kg</h2>
+    <p class="muted small chart-sub">Kilos soulevés {{ 'par semaine' if chart.points[0].label.startswith('Sem.') else 'par mois' }}, exercices dont c'est le muscle principal</p>
+    {{ chart_block(chart, "Tonnage " ~ muscle_name) }}
+  </div>
+
+  <h2 class="group-title">Exercices</h2>
+  <div class="card list">
+    {% for e in exercises %}
+      <a class="list-row" href="{{ url_for('progress_exercise', exercise_id=e.id) }}">
+        <span><strong>{{ e.name }}</strong><br><span class="muted small">{{ e.sets }} série{{ 's' if e.sets > 1 }}</span></span>
+        <span class="list-value">{{ e.tonnage|kg }} kg</span>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="muted center empty">Aucune série pour ce muscle sur cette période.</p>
+{% endif %}
+<p class="center"><a href="{{ url_for('exercises', muscle=muscle) }}">Voir les exercices de ce muscle →</a></p>
+{% endblock %}

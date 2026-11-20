@@ -1,0 +1,54 @@
+{# Schéma du corps (formes dans body_shapes.json, voir body.py). Les muscles sont colorés par les variables CSS --m-<muscle>. #}
+
+{# Les deux vues du corps choisi (homme ou femme), définies une seule fois par page et réutilisées par les petits schémas. #}
+{% macro body_sprite(sex) %}
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    {% for view, _ in BODY.VIEWS %}
+      {% set v = BODY.SHAPES[sex][view] %}
+      <symbol id="body-{{ view }}" viewBox="{{ v.box }}">
+        {% for p in v.parts %}
+          <path d="{{ p.d }}" style="fill: {% if p.m %}var(--m-{{ p.m }}, var(--muscle)){% elif p.k == 'hair' %}var(--hair){% else %}var(--skin){% endif %}"/>
+        {% endfor %}
+      </symbol>
+    {% endfor %}
+  </defs>
+</svg>
+{% endmacro %}
+
+{# Petit schéma zoomé : muscle principal en orange, secondaires en orange pâle. #}
+{% macro body_mini(sex, primary, secondary=[]) -%}
+{%- set style -%}
+  --m-{{ primary }}: var(--accent);{% for s in secondary %} --m-{{ s }}: var(--muscle-2nd);{% endfor %}
+{%- endset -%}
+{%- set view, box = BODY.mini_box(sex, primary) -%}
+{%- set full = BODY.SHAPES[sex][view].box.split() -%}
+<span class="body-mini" aria-hidden="true">
+  <svg viewBox="{{ box }}" preserveAspectRatio="xMidYMid meet">
+    <use href="#body-{{ view }}" x="{{ full[0] }}" y="{{ full[1] }}" width="{{ full[2] }}" height="{{ full[3] }}" style="{{ style }}"/>
+  </svg>
+</span>
+{%- endmacro %}
+
+{# Grand schéma cliquable : chaque muscle est un lien vers ses exercices. #}
+{% macro body_map(sex, selected=None) %}
+<div class="body-map">
+  {% for view, label in BODY.VIEWS %}
+    {% set v = BODY.SHAPES[sex][view] %}
+    <figure>
+      <svg viewBox="{{ v.box }}" role="group" aria-label="Corps vu de {{ label|lower }}">
+        {% for p in v.parts if not p.m %}
+          <path d="{{ p.d }}" class="{{ 'b-hair' if p.k == 'hair' else 'b-skin' }}"/>
+        {% endfor %}
+        {% for m, group in v.parts|selectattr("m")|groupby("m") %}
+          <a href="{{ url_for('exercises', muscle=m) if m != selected else url_for('exercises') }}" class="b-link {{ 'on' if m == selected }}">
+            <title>{{ MUSCLE_NAMES[m] }}</title>
+            {% for p in group %}<path d="{{ p.d }}"/>{% endfor %}
+          </a>
+        {% endfor %}
+      </svg>
+      <figcaption>{{ label }}</figcaption>
+    </figure>
+  {% endfor %}
+</div>
+{% endmacro %}

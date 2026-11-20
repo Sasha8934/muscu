@@ -1,0 +1,23 @@
+{# Un graphique (dessiné par static/charts.js) + le tableau des valeurs, pour qui préfère lire les chiffres. #}
+{% macro chart_block(chart, title, hidden=false, id="") %}
+<div class="chart-wrap" {% if id %}id="{{ id }}"{% endif %} {% if hidden %}hidden{% endif %}>
+  <div class="chart" data-chart='{{ chart|tojson }}' role="img"
+       aria-label="{{ title }} : {{ chart.points|length }} valeurs, de {{ chart.points[0].label }} à {{ chart.points[-1].label }}"></div>
+  <details class="chart-table">
+    <summary>Voir les chiffres</summary>
+    <table>
+      {% for p in chart.points|reverse %}
+        <tr><td>{{ p.label }}</td><td class="right">{{ p.value|kg }} {{ chart.unit }}</td></tr>
+      {% endfor %}
+    </table>
+  </details>
+</div>
+{% endmacro %}
+
+{% macro period_chips(periods, current, endpoint) %}
+<nav class="chips" aria-label="Période">
+  {% for key, label, _ in periods %}
+    <a class="chip {{ 'active' if key == current }}" href="{{ url_for(endpoint, periode=key, **kwargs) }}">{{ label }}</a>
+  {% endfor %}
+</nav>
+{% endmacro %}
