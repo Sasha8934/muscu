@@ -1,7 +1,10 @@
 @echo off
-rem Double-clique sur ce fichier pour lancer l'application.
-rem Pour l'arreter : ferme cette fenetre noire.
+rem Lance l'application Muscu sur cet ordinateur (comme Syrinx).
+rem Double-cliquer sur ce fichier, puis laisser cette fenetre ouverte pendant l'utilisation.
+rem Pour arreter : fermer cette fenetre.
+
 cd /d "%~dp0"
-start "" /b cmd /c "timeout /t 3 >nul & start http://127.0.0.1:5000"
-python app.py
-pause
+echo Application Muscu : http://127.0.0.1:8001
+echo Laissez cette fenetre ouverte. Fermez-la pour arreter l'application.
+start "" "http://127.0.0.1:8001/"
+python -m http.server 8001 --bind 127.0.0.1

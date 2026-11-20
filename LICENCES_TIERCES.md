@@ -31,3 +31,7 @@ SOFTWARE.
 ## Photos des exercices (`static/exos/`)
 
 Free Exercise DB : https://github.com/yuhonas/free-exercise-db, domaine public (The Unlicense). Images redimensionnées.
+
+## Police Inter (`polices/`)
+
+Inter, par Rasmus Andersson : https://rsms.me/inter/ ; licence SIL Open Font License 1.1 (https://openfontlicense.org). Fichiers copiés depuis Google Fonts.

@@ -728,3 +728,17 @@ label, .label { font-size: 0.85rem; }
 .login-logo { margin: 0 auto 8px; border-radius: 22px; box-shadow: 0 10px 30px rgba(var(--accent-rgb), 0.3); }
 .login form { text-align: left; }
 .logout { margin: 30px 0 0; text-align: center; }
+
+/* --- Version sans serveur : bandeau de message, petits ajustements --- */
+.toast {
+  position: fixed; z-index: 40; left: 50%; transform: translateX(-50%);
+  top: calc(64px + env(safe-area-inset-top)); width: min(calc(100% - 24px), 520px);
+  box-shadow: var(--shadow); animation: toast-in 0.2s ease-out;
+}
+.toast .flash { margin: 0; background: var(--surface-3); }
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, -8px); } }
+.pick-row .pick-btn { flex: 1; min-width: 0; border-top: 0; }
+.file-btn { cursor: pointer; }
+.prefs-sep { margin-top: 12px; border-top: 1px solid var(--border); }
+.tabbar a > span:first-child, .topbar-link > span:first-child, .brand-mark { display: inline-flex; }
+.tab-main-btn { color: var(--accent-ink); }

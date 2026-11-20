@@ -1,46 +1,31 @@
-# Mettre Muscu en ligne (PythonAnywhere, gratuit)
+# Muscu en ligne (GitHub Pages, gratuit, sans serveur)
 
-Le code est sur GitHub ; PythonAnywhere le fait tourner. La base de données (`muscu.db`) n'est **jamais** envoyée sur GitHub (voir `.gitignore`) : elle vit seulement sur PythonAnywhere.
+Muscu est une application **sans serveur** (comme Syrinx) : des pages HTML, du CSS et du JavaScript.
+Les données sont enregistrées **dans l'appareil** (téléphone ou PC), jamais sur Internet.
 
-## Installation (une seule fois)
+- Adresse : https://sasha8934.github.io/muscu/
+- Code : https://github.com/Sasha8934/muscu (branche `main`, publiée depuis la racine)
 
-1. Créer un compte gratuit « Beginner » sur https://www.pythonanywhere.com
-2. Onglet **Consoles** > **Bash**, puis taper :
-   ```
-   git clone https://github.com/Sasha8934/muscu.git
-   ```
-3. Onglet **Web** > **Add a new web app** > **Manual configuration** > la dernière version de Python proposée.
-4. Dans l'onglet **Web** :
-   - **Source code** : `/home/TON-PSEUDO/muscu`
-   - **Static files** : URL `/static/`, dossier `/home/TON-PSEUDO/muscu/static`
-   - **Force HTTPS** : activé
-   - Cliquer sur le lien du **WSGI configuration file**, tout effacer et coller le modèle ci-dessous (remplacer le mot de passe et TON-PSEUDO), puis **Save**.
-5. Bouton vert **Reload**, puis ouvrir `https://TON-PSEUDO.pythonanywhere.com`.
+## Publier une nouvelle version
 
-### Modèle du fichier WSGI
+1. Dans `sw.js`, augmenter `VERSION` (ex. `v1` -> `v2`). Sinon les téléphones gardent l'ancienne version.
+   Ajouter à `FICHIERS_APP` tout nouveau fichier JavaScript ou CSS.
+2. `git add -A`, `git commit -m "…"`, `git push`.
+3. Attendre 1 à 2 minutes, puis ouvrir l'adresse et vérifier.
 
-```python
-import os
-import sys
+## Installer sur le téléphone
 
-os.environ["MUSCU_PASSWORD"] = "ton mot de passe"  # demandé pour entrer dans l'appli
-sys.path.insert(0, "/home/TON-PSEUDO/muscu")
+- **iPhone (Safari)** : bouton Partager > « Sur l'écran d'accueil ».
+- **Android (Chrome)** : menu ⋮ > « Ajouter à l'écran d'accueil » (ou « Installer l'application »).
 
-from app import app as application
-```
+Une fois ouverte une première fois, l'appli marche **sans réseau**.
 
-## Mettre à jour l'appli après une modification
+## Sauvegarder / changer d'appareil
 
-1. Sur le PC : `git push` (envoie le nouveau code sur GitHub).
-2. Sur PythonAnywhere, console **Bash** : `cd muscu && git pull`
-3. Onglet **Web** : bouton **Reload**.
+Onglet **Programme** > **Sauvegarde** : « Sauvegarder » crée un fichier, « Restaurer » le recharge
+(sur le même appareil ou sur un autre). Les données du PC et du téléphone sont séparées.
 
-Les données ne sont pas touchées par une mise à jour.
+## Utiliser sur le PC
 
-## À faire une fois par mois
-
-Compte gratuit : l'appli s'arrête si on ne la prolonge pas. Onglet **Web** > bouton « **Run until 1 month from today** » (PythonAnywhere envoie un e-mail de rappel).
-
-## Sauvegarder ses données
-
-Onglet **Files** > `muscu/muscu.db` > **Download**.
+Double-clic sur `Lancer Muscu.bat` (adresse http://127.0.0.1:8001). Les données de cette adresse
+sont séparées de celles du site en ligne.

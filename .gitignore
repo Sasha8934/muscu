@@ -5,7 +5,11 @@
 CLAUDE.md
 .claude/
 exemples design/
+*.json.bak
 
 # Fichiers générés
 __pycache__/
 *.pyc
+
+# Pages de test : seulement sur le PC (l'une efface les données du navigateur)
+tests/
