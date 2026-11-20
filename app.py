@@ -6,10 +6,11 @@ Puis ouvrir http://127.0.0.1:5000 dans le navigateur.
 
 En ligne (voir MISE_EN_LIGNE.md), deux variables d'environnement :
   MUSCU_PASSWORD    mot de passe demandé pour entrer (sans elle : pas de mot de passe, usage sur le PC)
-  MUSCU_SECRET_KEY  longue phrase secrète qui protège la connexion
+  MUSCU_SECRET_KEY  (facultatif) clé qui protège la connexion ; sinon créée au hasard dans .muscu_secret_key
 """
 import hmac
 import os
+import secrets
 import sqlite3
 import time
 import unicodedata
@@ -26,14 +27,27 @@ BASE_DIR = Path(__file__).parent
 DB_PATH = Path(os.environ.get("MUSCU_DB", BASE_DIR / "muscu.db"))
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get("MUSCU_SECRET_KEY") or "dev-local-seulement"
 PASSWORD = os.environ.get("MUSCU_PASSWORD", "")
+
+
+def secret_key():
+    """Clé qui protège la connexion. En ligne, si elle n'est pas fournie, elle est créée une fois
+    au hasard et gardée à côté de la base (fichier jamais envoyé sur GitHub)."""
+    if os.environ.get("MUSCU_SECRET_KEY"):
+        return os.environ["MUSCU_SECRET_KEY"]
+    if not PASSWORD:
+        return "dev-local-seulement"
+    path = DB_PATH.parent / ".muscu_secret_key"
+    if not path.exists():
+        path.write_text(secrets.token_hex(32), encoding="utf-8")
+    return path.read_text(encoding="utf-8").strip()
+
+
+app.config["SECRET_KEY"] = secret_key()
 if PASSWORD:
     # En ligne : connexion gardée un an sur l'appareil, cookie envoyé seulement en HTTPS
     app.config.update(PERMANENT_SESSION_LIFETIME=timedelta(days=365), SESSION_COOKIE_SECURE=True,
                       SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax")
-    if app.config["SECRET_KEY"] == "dev-local-seulement":
-        raise RuntimeError("MUSCU_SECRET_KEY doit être défini quand MUSCU_PASSWORD l'est.")
 
 MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
         "août", "septembre", "octobre", "novembre", "décembre"]

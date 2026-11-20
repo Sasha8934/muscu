@@ -14,7 +14,7 @@ Le code est sur GitHub ; PythonAnywhere le fait tourner. La base de données (`m
    - **Source code** : `/home/TON-PSEUDO/muscu`
    - **Static files** : URL `/static/`, dossier `/home/TON-PSEUDO/muscu/static`
    - **Force HTTPS** : activé
-   - Cliquer sur le lien du **WSGI configuration file**, tout effacer et coller le modèle ci-dessous (remplacer les 3 valeurs), puis **Save**.
+   - Cliquer sur le lien du **WSGI configuration file**, tout effacer et coller le modèle ci-dessous (remplacer le mot de passe et TON-PSEUDO), puis **Save**.
 5. Bouton vert **Reload**, puis ouvrir `https://TON-PSEUDO.pythonanywhere.com`.
 
 ### Modèle du fichier WSGI
@@ -23,8 +23,7 @@ Le code est sur GitHub ; PythonAnywhere le fait tourner. La base de données (`m
 import os
 import sys
 
-os.environ["MUSCU_PASSWORD"] = "ton mot de passe"          # demandé pour entrer dans l'appli
-os.environ["MUSCU_SECRET_KEY"] = "une longue phrase secrète au hasard"  # ne la donne à personne
+os.environ["MUSCU_PASSWORD"] = "ton mot de passe"  # demandé pour entrer dans l'appli
 sys.path.insert(0, "/home/TON-PSEUDO/muscu")
 
 from app import app as application

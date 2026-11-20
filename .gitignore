@@ -1,6 +1,7 @@
 # Données personnelles et notes : jamais sur GitHub
 *.db
 *.db-journal
+.muscu_secret_key
 CLAUDE.md
 .claude/
 exemples design/
